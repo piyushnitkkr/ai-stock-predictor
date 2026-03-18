@@ -74,7 +74,6 @@ Visit `http://localhost:8501` in your browser to access the dashboard.
 ## 📈 Model Performance
 
 - **Accuracy**: 70%
-- **Loss**: 0.80
 - **Sequence Length**: 120 days
 - **Class Labels**: Bullish, Bearish, Sideways
 
