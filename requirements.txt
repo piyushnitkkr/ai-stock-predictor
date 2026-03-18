@@ -1,0 +1,13 @@
+numpy
+pandas
+scikit-learn
+tensorflow
+xgboost
+ta
+joblib
+yfinance
+streamlit
+plotly
+requests
+python-dotenv
+vaderSentiment
