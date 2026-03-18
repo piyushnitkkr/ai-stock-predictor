@@ -366,7 +366,8 @@ with tab_picks:
     with st.spinner("Scanning Nifty 50 for signals…"):
         try:
             picks = _cached_picks()
-        except:
+        except Exception as e:
+            st.error(f"Error fetching picks: {e}")
             picks = []
 
     if picks:
@@ -387,4 +388,4 @@ with tab_picks:
                 <span style='color:{br_color};'>{s["breakout"]}</span>
             </div>""", unsafe_allow_html=True)
     else:
-        st.info("No strong signals today — check back later.")
+        st.info("🔄 No strong bullish signals currently. The system scans all 50 stocks and may take a moment on first load.")

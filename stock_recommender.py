@@ -26,6 +26,7 @@ def _calculate_news_sentiment(ticker):
 def recommend_stocks():
 
     picks = []
+    processed = 0
 
     for stock in nifty50:
 
@@ -41,7 +42,7 @@ def recommend_stocks():
             sentiment = _calculate_news_sentiment(stock)
 
             # Dynamic threshold for bullish stocks
-            bullish_threshold = 0.30  # Example: Adjust based on validation set
+            bullish_threshold = 0.25  # Lowered from 0.30 to show more picks
 
             score = pred["bullish"] * 2 + sentiment
             if breakout == "Bullish Breakout":
@@ -55,9 +56,13 @@ def recommend_stocks():
                     "breakout": breakout,
                     "score": score
                 })
+            
+            processed += 1
 
         except Exception as e:
-            logging.error(f"Error processing stock {stock}: {e}")
+            logging.error(f"Error processing stock {stock}: {e}", exc_info=True)
+            continue
 
+    logging.info(f"Processed {processed}/{len(nifty50)} stocks, found {len(picks)} picks")
     picks = sorted(picks, key=lambda x: x["score"], reverse=True)
     return picks[:10]
