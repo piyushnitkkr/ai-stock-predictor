@@ -27,6 +27,7 @@ def recommend_stocks():
 
     picks = []
     processed = 0
+    failed = []
 
     for stock in nifty50:
 
@@ -34,7 +35,7 @@ def recommend_stocks():
 
             data = get_stock_data(stock)
             if data is None or data.empty:
-                logging.warning(f"No data for stock: {stock}")
+                failed.append(stock)
                 continue
 
             pred = predict_stock(stock, data)  # Use same data we fetched
@@ -60,9 +61,12 @@ def recommend_stocks():
             processed += 1
 
         except Exception as e:
-            logging.error(f"Error processing stock {stock}: {e}", exc_info=True)
+            logging.debug(f"Error processing stock {stock}: {e}")
+            failed.append(stock)
             continue
 
-    logging.info(f"Processed {processed}/{len(nifty50)} stocks, found {len(picks)} picks")
+    if failed:
+        logging.info(f"Skipped {len(failed)} stocks with data issues: {', '.join(failed[:5])}")
+    logging.info(f"Processed {processed}/{len(nifty50)} stocks, found {len(picks)} bullish picks")
     picks = sorted(picks, key=lambda x: x["score"], reverse=True)
     return picks[:10]

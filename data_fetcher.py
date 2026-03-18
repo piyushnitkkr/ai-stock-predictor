@@ -1,6 +1,10 @@
 import yfinance as yf
 import logging
 import pandas as pd
+import warnings
+
+# Suppress yfinance download warnings
+warnings.filterwarnings('ignore', message='.*download.*')
 
 logging.basicConfig(level=logging.INFO,
 format="%(asctime)s - %(levelname)s - %(message)s")
@@ -74,7 +78,11 @@ def get_stock_data(ticker):
 
         try:
 
-            logging.info(f"Fetching data for ticker: {symbol}")
+            logging.debug(f"Fetching data for ticker: {symbol}")
+
+            # Suppress yfinance verbose logging
+            yf_logger = logging.getLogger('yfinance')
+            yf_logger.setLevel(logging.ERROR)
 
             data = yf.download(
                 symbol,
@@ -83,6 +91,8 @@ def get_stock_data(ticker):
                 progress=False,
                 auto_adjust=True
             )
+            
+            yf_logger.setLevel(logging.INFO)
 
             if data is None or data.empty:
                 continue
@@ -93,7 +103,7 @@ def get_stock_data(ticker):
                 continue
 
             if not _valid_price(cleaned):
-                logging.warning(f"Rejected ticker due to invalid price: {symbol}")
+                logging.debug(f"Rejected ticker due to invalid price: {symbol}")
                 continue
 
             cleaned.attrs["used_ticker"] = symbol
@@ -102,10 +112,10 @@ def get_stock_data(ticker):
 
         except Exception as e:
 
-            logging.warning(f"Error fetching {symbol}: {e}")
+            logging.debug(f"Error fetching {symbol}: {e}")
             continue
 
-    logging.error(f"No valid data found for input ticker: {ticker}")
+    logging.warning(f"No valid data found for ticker: {ticker}")
 
     return None
 
@@ -114,6 +124,9 @@ def get_nifty_index():
 
     try:
 
+        yf_logger = logging.getLogger('yfinance')
+        yf_logger.setLevel(logging.ERROR)
+
         data = yf.download(
             "^NSEI",
             period="5y",
@@ -121,6 +134,8 @@ def get_nifty_index():
             progress=False,
             auto_adjust=True
         )
+        
+        yf_logger.setLevel(logging.INFO)
 
         if data is None or data.empty:
             return pd.Series(dtype=float)
@@ -129,6 +144,6 @@ def get_nifty_index():
 
     except Exception as e:
 
-        logging.warning(f"Failed to fetch NIFTY index: {e}")
+        logging.debug(f"Failed to fetch NIFTY index: {e}")
 
         return pd.Series(dtype=float)
