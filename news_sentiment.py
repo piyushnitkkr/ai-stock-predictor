@@ -3,13 +3,40 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 import os
 from dotenv import load_dotenv
+import streamlit as st
 
-# Load environment variables from .env file
+# Load environment variables from .env file (for local development)
 load_dotenv()
 
 analyzer = SentimentIntensityAnalyzer()
 
-API_KEY = os.getenv("NEWS_API_KEY", "YOUR_NEWS_API_KEY")
+# Try to get API key from Streamlit secrets first, then from .env, then use default
+def get_api_key():
+    try:
+        # Streamlit Cloud uses st.secrets
+        if hasattr(st, 'secrets') and st.secrets:
+            api_key = st.secrets.get("NEWS_API_KEY", None)
+            if api_key:
+                return api_key
+    except:
+        pass
+    
+    # Fall back to .env file (local development)
+    api_key = os.getenv("NEWS_API_KEY", None)
+    if api_key and api_key != "YOUR_NEWS_API_KEY":
+        return api_key
+    
+    # Return None if not found - graceful degradation
+    return None
+
+# Get API key lazily on first use
+_API_KEY = None
+
+def _get_api_key_cached():
+    global _API_KEY
+    if _API_KEY is None:
+        _API_KEY = get_api_key()
+    return _API_KEY
 
 
 def _parse_yf_item(item):
@@ -28,9 +55,13 @@ def _parse_yf_item(item):
 
 def get_news(company):
     try:
+        api_key = _get_api_key_cached()
+        if not api_key:
+            return []
+        
         url = (
             f"https://newsapi.org/v2/everything?q={company}"
-            f"&language=en&sortBy=publishedAt&apiKey={API_KEY}"
+            f"&language=en&sortBy=publishedAt&apiKey={api_key}"
         )
         data = requests.get(url, timeout=5).json()
         return [a["title"] for a in data.get("articles", [])[:10]]
