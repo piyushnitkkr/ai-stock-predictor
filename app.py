@@ -129,7 +129,7 @@ st.markdown("---")
 sc1, sc2 = st.columns([6, 1])
 with sc1:
     ticker_input = st.text_input(
-        "",
+        "Ticker Search",
         placeholder="Enter ticker — e.g. RELIANCE, TCS, INFY, HDFCBANK.NS",
         label_visibility="collapsed",
     )
