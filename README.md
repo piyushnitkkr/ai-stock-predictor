@@ -30,6 +30,26 @@ cd ai-stock-predictor
 pip install -r requirements.txt
 ```
 
+### Environment Setup
+
+1. **Create a `.env` file** in the project root:
+```bash
+cp .env.example .env
+```
+
+2. **Add your API keys** to `.env`:
+```
+NEWS_API_KEY = "your_news_api_key_from_newsapi.org"
+```
+
+3. **Get a NEWS_API_KEY**:
+   - Visit [https://newsapi.org/](https://newsapi.org/)
+   - Sign up for a free account
+   - Copy your API key
+   - Paste it in `.env`
+
+**Note**: `.env` is in `.gitignore` and will never be committed to GitHub for security.
+
 ### Running the Dashboard
 
 ```bash
