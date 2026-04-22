@@ -81,14 +81,17 @@ def _valid_price(data):
 
         # reject obviously wrong price ranges
         if last_price <= 0:
+            logging.info(f"  Price validation failed: negative price (${last_price:.2f})")
             return False
 
         if last_price > 200000:  # unrealistic for Indian stocks
+            logging.info(f"  Price validation failed: price too high (${last_price:.2f})")
             return False
 
         return True
 
-    except:
+    except Exception as e:
+        logging.info(f"  Price validation error: {e}")
         return False
 
 
@@ -125,20 +128,27 @@ def get_stock_data(ticker):
                 yf_logger.setLevel(logging.INFO)
 
                 if data is None or data.empty:
-                    logging.debug(f"No data returned for {symbol}")
+                    logging.info(f"[{symbol}]: No data returned from yfinance")
                     break  # No data available, try next symbol
+
+                # Handle MultiIndex columns from yfinance
+                if isinstance(data.columns, pd.MultiIndex):
+                    # Flatten MultiIndex columns by selecting the first level
+                    data.columns = data.columns.get_level_values(0)
 
                 cleaned = data.dropna()
 
                 if cleaned.empty:
-                    logging.debug(f"All data is NaN for {symbol}")
+                    logging.info(f"[{symbol}]: All data is NaN after dropna()")
                     break
 
                 if not _valid_price(cleaned):
-                    logging.debug(f"Rejected ticker due to invalid price: {symbol}")
+                    last_price = float(cleaned["Close"].iloc[-1])
+                    logging.info(f"[{symbol}]: Rejected due to invalid price: ${last_price:.2f}")
                     break
 
                 cleaned.attrs["used_ticker"] = symbol
+                logging.info(f"[{symbol}]: Successfully fetched {len(cleaned)} days of data")
                 return cleaned
 
             except Exception as e:
@@ -156,7 +166,7 @@ def get_stock_data(ticker):
                         break
                 else:
                     # Other errors: log and move to next symbol
-                    logging.debug(f"Error fetching {symbol}: {e}")
+                    logging.info(f"[{symbol}]: Error fetching - {type(e).__name__}: {e}")
                     break
 
     logging.warning(f"No valid data found for ticker: {ticker}")
@@ -190,6 +200,10 @@ def get_nifty_index():
 
             if data is None or data.empty:
                 return pd.Series(dtype=float)
+
+            # Handle MultiIndex columns from yfinance
+            if isinstance(data.columns, pd.MultiIndex):
+                data.columns = data.columns.get_level_values(0)
 
             return data["Close"].dropna()
 
